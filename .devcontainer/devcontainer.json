@@ -1,0 +1,13 @@
+{
+  "name": "Template Devcontainer",
+  "image": "ghcr.io/devsecninja/dotfiles-devcontainer:v0.6.0@sha256:238aec66927da1d67f7f7225123c1d207f7c01c93d451fab7189c94d53453940",
+  "postCreateCommand": "",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "DavidAnson.vscode-markdownlint",
+        "GitHub.vscode-pull-request-github"
+      ]
+    }
+  }
+}
