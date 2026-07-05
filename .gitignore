@@ -1,0 +1,16 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Local environment / secrets
+.env
+*.local
+
+# Editor / OS
+.idea/
+*.swp
+.DS_Store
+
+# Local mock vault (file-backed dev store)
+kvp-mock-vault.json
+*.mock-vault.json

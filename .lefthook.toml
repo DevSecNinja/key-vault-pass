@@ -1,0 +1,39 @@
+# Pre-commit hooks for key-vault-pass. Run: mise exec -- lefthook run pre-commit
+[pre-commit]
+parallel = true
+
+[pre-commit.commands.cargo-fmt]
+run = "mise exec -- cargo fmt --all -- --check"
+glob = ["**/*.rs"]
+
+[pre-commit.commands.cargo-clippy]
+run = "mise exec -- cargo clippy --workspace --all-targets -- -D warnings"
+glob = ["**/*.rs", "**/Cargo.toml"]
+
+[pre-commit.commands.actionlint]
+run = "mise exec -- actionlint {staged_files}"
+glob = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+
+[pre-commit.commands.format-yaml]
+run = "mise exec -- yamlfmt {staged_files}"
+glob = ["**/*.yaml", "**/*.yml"]
+stage_fixed = true
+
+[pre-commit.commands.yamllint]
+run = "mise exec -- yamllint {staged_files}"
+glob = ["**/*.yaml", "**/*.yml"]
+
+[pre-commit.commands.gitleaks]
+run = "mise exec -- gitleaks protect --staged --redact"
+
+[pre-commit.commands.trivy]
+run = "mise exec -- trivy fs --scanners misconfig,secret ."
+
+[pre-commit.commands.zizmor]
+run = "mise exec -- zizmor {staged_files}"
+glob = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+
+[pre-commit.commands.dprint]
+run = "mise exec -- dprint fmt {staged_files}"
+glob = ["**/*.md"]
+stage_fixed = true

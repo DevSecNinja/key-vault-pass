@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Sign in · key-vault-pass{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>key-vault-pass</h1>
+  <p class="muted">An enterprise password manager backed by Azure Key Vault and
+    Microsoft Entra ID.</p>
+  <p>Sign in with your Microsoft Entra account to manage secrets. Your own Key
+    Vault permissions (RBAC) apply to every action.</p>
+  {% if mock %}
+  <p class="muted">⚠️ Running in <strong>local mock mode</strong> — sign-in is
+    simulated and secrets are stored in a local file (no Azure/Entra).</p>
+  <p><a class="btn" href="/auth/login">Sign in (dev mock)</a></p>
+  {% else %}
+  <p><a class="btn" href="/auth/login">Sign in with Microsoft Entra</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+[package]
+name = "kvp-cli"
+description = "key-vault-pass command-line interface (`kvp`)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "kvp"
+path = "src/main.rs"
+
+[dependencies]
+kvp-core = { path = "../kvp-core" }
+tokio.workspace = true
+clap.workspace = true
+rpassword.workspace = true
+anyhow.workspace = true
+secrecy.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
