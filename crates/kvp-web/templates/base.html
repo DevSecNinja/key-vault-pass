@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}key-vault-pass{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --fg: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand { font-weight: 700; color: var(--fg); text-decoration: none; }
+    .user { color: var(--muted); font-size: .9rem; }
+    a { color: var(--accent); }
+
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+
+    label { display: block; margin: .8rem 0 .3rem; color: var(--muted); font-size: .9rem; }
+
+    input[type=text], input[type=password], textarea {
+      width: 100%;
+      padding: .55rem .7rem;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--fg);
+      font-size: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: .55rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #04263a;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn.secondary { background: transparent; color: var(--accent); }
+    .btn.danger { background: transparent; border-color: #f87171; color: #f87171; }
+
+    .toolbar { display: flex; gap: .75rem; align-items: center; margin-bottom: 1.25rem; }
+    .toolbar form { flex: 1; display: flex; gap: .5rem; }
+    .row { display: flex; gap: .5rem; align-items: center; }
+    .muted { color: var(--muted); }
+  </style>
+</head>
+
+<body>
+  <header>
+    <a href="/entries" class="brand">🔐 key-vault-pass</a>
+    {% if user_name %}
+    <span class="user">{{ user_name }}{% if user_email %} ({{ user_email }}){% endif %} ·
+      <a href="/auth/logout">Sign out</a></span>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+
+</html>

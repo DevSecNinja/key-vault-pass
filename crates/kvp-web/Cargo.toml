@@ -1,0 +1,34 @@
+[package]
+name = "kvp-web"
+description = "key-vault-pass web application (Microsoft Entra sign-in + Key Vault CRUD)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "kvp-web"
+path = "src/main.rs"
+
+[dependencies]
+kvp-core = { path = "../kvp-core" }
+tokio.workspace = true
+axum.workspace = true
+tower-sessions.workspace = true
+tera.workspace = true
+oauth2.workspace = true
+reqwest.workspace = true
+base64.workspace = true
+secrecy.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+url.workspace = true
+time.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

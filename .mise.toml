@@ -4,6 +4,8 @@
 # this config and fails with guidance if a tool it needs is not pinned here.
 # Remove any tools your repo does not need (and disable the matching lint job).
 [tools]
+rust = "1.96.0"
+lefthook = "2.1.9"
 dprint = "0.55.1"
 yamlfmt = "0.21.0"
 actionlint = "1.7.12"

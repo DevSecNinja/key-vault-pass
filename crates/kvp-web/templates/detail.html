@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} · key-vault-pass{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn secondary" href="/entries">← Back</a>
+</div>
+
+<div class="card">
+  <h1>{{ name }}</h1>
+
+  {% if username %}<p><span class="muted">Username:</span> {{ username }}</p>{% endif %}
+  {% if url %}<p><span class="muted">URL:</span> <a href="{{ url }}" rel="noopener noreferrer">{{ url }}</a></p>{% endif %}
+  {% if notes %}<p><span class="muted">Notes:</span> {{ notes }}</p>{% endif %}
+  {% if updated_at %}<p class="muted">Last updated {{ updated_at }}</p>{% endif %}
+
+  <label>Password</label>
+  <div class="row">
+    <input type="password" id="pw" value="{{ password }}" readonly>
+    <button class="btn secondary" type="button" onclick="togglePw()">Show</button>
+    <button class="btn secondary" type="button" onclick="copyPw()">Copy</button>
+  </div>
+
+  <p style="margin-top:1.5rem">
+    <a class="btn secondary" href="/entries/new">New entry</a>
+  <form method="post" action="/entries/{{ name }}/delete" style="display:inline"
+    onsubmit="return confirm('Delete entry {{ name }}?');">
+    <button class="btn danger" type="submit">Delete</button>
+  </form>
+  </p>
+</div>
+
+<script>
+  function togglePw() {
+    const el = document.getElementById('pw');
+    const btn = event.target;
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
+    else { el.type = 'password'; btn.textContent = 'Show'; }
+  }
+  function copyPw() {
+    const el = document.getElementById('pw');
+    navigator.clipboard.writeText(el.value);
+  }
+</script>
+{% endblock %}

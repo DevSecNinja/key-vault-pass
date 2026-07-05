@@ -1,0 +1,30 @@
+[package]
+name = "kvp-core"
+description = "Shared core for key-vault-pass: Azure Key Vault password entry model, repository and auth."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+azure_core.workspace = true
+azure_identity.workspace = true
+azure_security_keyvault_secrets.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+# Enables reqwest's native-tls (schannel/OS trust) transport for the Azure SDK
+# across all binaries that use this crate; not referenced directly in code.
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+secrecy.workspace = true
+rand.workspace = true
+time.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true

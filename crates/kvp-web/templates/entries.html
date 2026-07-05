@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Entries · key-vault-pass{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <form method="get" action="/entries">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search entries by name…">
+    <button class="btn secondary" type="submit">Search</button>
+  </form>
+  <a class="btn" href="/entries/new">New entry</a>
+</div>
+
+<div class="card">
+  {% if entries | length == 0 %}
+  <p class="muted">No entries found.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr>
+        <td><a href="/entries/{{ entry.name }}">{{ entry.name }}</a></td>
+        <td class="muted">{% if entry.updated_at %}{{ entry.updated_at | truncate(length=10, end="") }}{% else %}-{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}
