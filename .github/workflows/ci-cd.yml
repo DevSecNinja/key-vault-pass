@@ -59,6 +59,9 @@ jobs:
           # renovate: datasource=github-releases depName=jdx/mise
           version: "2026.6.11"
 
+      - name: Install Rust components
+        run: mise exec -- rustup component add rustfmt clippy
+
       - name: Check formatting
         run: mise exec -- cargo fmt --all --check
 
