@@ -49,10 +49,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install mise (Rust toolchain + lint tools)
+      - name: Install mise (Rust toolchain + lint tools) # zizmor: ignore[cache-poisoning]
         uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
         with:
           install: true
+          # Don't read/write the tool cache on tag (publish) events; combined
+          # with the ignore above this documents the accepted low-risk posture.
+          cache: ${{ github.ref_type != 'tag' }}
           # renovate: datasource=github-releases depName=jdx/mise
           version: "2026.6.11"
 

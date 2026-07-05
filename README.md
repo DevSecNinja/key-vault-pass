@@ -1,5 +1,11 @@
 # key-vault-pass
 
+> ⚠️ **Disclaimer — proof of concept, under development.** This project is a
+> work-in-progress proof of concept. It is **not** production-hardened, has not
+> undergone a security audit, and the author does **not** use it personally.
+> Explore and experiment, but do not rely on it to store real secrets. Use at
+> your own risk.
+
 An enterprise-grade password manager backed by **Azure Key Vault** with
 **Microsoft Entra ID** authentication. It ships two front ends that share one
 core library written in Rust:
@@ -126,6 +132,9 @@ kvp set github --username alice --generate --length 24
 # Retrieve (password hidden unless --show):
 kvp get github
 kvp get github --show
+
+# Automation: read the password from stdin (avoids argv/shell history):
+printf '%s' "$MY_SECRET" | kvp set github --username alice --password-stdin
 
 # List / search:
 kvp list

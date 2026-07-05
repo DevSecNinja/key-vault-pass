@@ -72,6 +72,9 @@ struct SetArgs {
     /// Provide the password inline (otherwise prompted securely).
     #[arg(long)]
     password: Option<String>,
+    /// Read the password from stdin (one line) — avoids argv/shell history.
+    #[arg(long, conflicts_with = "password")]
+    password_stdin: bool,
     /// Generate a strong password instead of prompting.
     #[arg(short, long)]
     generate: bool,
@@ -181,6 +184,14 @@ async fn cmd_set(ctx: &Ctx, args: SetArgs) -> Result<(), Error> {
         })?;
         println!("Generated password: {pw}");
         pw
+    } else if args.password_stdin {
+        // Read a single line from stdin (trailing newline stripped).
+        use std::io::BufRead as _;
+        let mut line = String::new();
+        std::io::stdin().lock().read_line(&mut line).map_err(|e| {
+            Error::Configuration(format!("failed to read password from stdin: {e}"))
+        })?;
+        line.trim_end_matches(['\r', '\n']).to_string()
     } else if let Some(pw) = args.password {
         pw
     } else {

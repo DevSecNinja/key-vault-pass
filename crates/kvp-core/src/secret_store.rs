@@ -29,9 +29,9 @@ pub struct RawSecretProperties {
 
 /// Subset of the Key Vault secrets data plane the repository relies on.
 ///
-/// Implemented for real by [`crate::vault::KeyVaultStore`] and by an in-memory
-/// fake in tests. `VaultRepository` is generic over this trait, so both use
-/// static dispatch with no runtime cost.
+/// Implemented for real by [`crate::keyvault::KeyVaultStore`] and by an
+/// in-memory fake in tests. `VaultRepository` is generic over this trait, so
+/// both use static dispatch with no runtime cost.
 #[allow(async_fn_in_trait)]
 pub trait SecretStore {
     /// Create or update a secret with the given value, content type and tags.

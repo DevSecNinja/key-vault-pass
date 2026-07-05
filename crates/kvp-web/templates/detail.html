@@ -13,32 +13,53 @@
   {% if notes %}<p><span class="muted">Notes:</span> {{ notes }}</p>{% endif %}
   {% if updated_at %}<p class="muted">Last updated {{ updated_at }}</p>{% endif %}
 
-  <label>Password</label>
+  <label for="pw">Password</label>
   <div class="row">
-    <input type="password" id="pw" value="{{ password }}" readonly>
-    <button class="btn secondary" type="button" onclick="togglePw()">Show</button>
+    <input type="password" id="pw" value="" readonly autocomplete="off" placeholder="••••••••">
+    <button class="btn secondary" type="button" onclick="togglePw(this)">Show</button>
     <button class="btn secondary" type="button" onclick="copyPw()">Copy</button>
   </div>
 
-  <p style="margin-top:1.5rem">
+  <div class="row" style="margin-top:1.5rem">
     <a class="btn secondary" href="/entries/new">New entry</a>
-  <form method="post" action="/entries/{{ name }}/delete" style="display:inline"
-    onsubmit="return confirm('Delete entry {{ name }}?');">
-    <button class="btn danger" type="submit">Delete</button>
-  </form>
-  </p>
+    <form method="post" action="/entries/{{ name }}/delete"
+      onsubmit="return confirm('Delete entry {{ name }}?');">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn danger" type="submit">Delete</button>
+    </form>
+  </div>
 </div>
 
 <script>
-  function togglePw() {
-    const el = document.getElementById('pw');
-    const btn = event.target;
-    if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
-    else { el.type = 'password'; btn.textContent = 'Show'; }
+  // The password is fetched on demand (explicit user action) and is never sent
+  // with the page — see the /entries/{name}/reveal endpoint.
+  const revealUrl = "/entries/" + encodeURIComponent("{{ name }}") + "/reveal";
+
+  async function fetchPw() {
+    const res = await fetch(revealUrl, { headers: { "Accept": "text/plain" } });
+    if (!res.ok) {
+      throw new Error("failed to fetch password");
+    }
+    return await res.text();
   }
-  function copyPw() {
-    const el = document.getElementById('pw');
-    navigator.clipboard.writeText(el.value);
+
+  async function togglePw(btn) {
+    const el = document.getElementById("pw");
+    if (el.type === "text") {
+      el.type = "password";
+      btn.textContent = "Show";
+      return;
+    }
+    if (!el.value) {
+      el.value = await fetchPw();
+    }
+    el.type = "text";
+    btn.textContent = "Hide";
+  }
+
+  async function copyPw() {
+    const pw = await fetchPw();
+    await navigator.clipboard.writeText(pw);
   }
 </script>
 {% endblock %}

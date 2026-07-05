@@ -9,20 +9,24 @@
   <h1>New entry</h1>
   {% if error %}<p style="color:#f87171">{{ error }}</p>{% endif %}
   <form method="post" action="/entries">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+
     <label for="name">Name (letters, digits, dashes)</label>
     <input type="text" id="name" name="name" required pattern="[0-9A-Za-z-]{1,127}"
       value="{{ name | default(value='') }}">
 
     <label for="username">Username</label>
-    <input type="text" id="username" name="username" value="{{ username | default(value='') }}">
+    <input type="text" id="username" name="username" value="{{ username | default(value='') }}"
+      autocomplete="username">
 
     <label for="url">URL</label>
     <input type="text" id="url" name="url" value="{{ url | default(value='') }}">
 
     <label for="password">Password</label>
     <div class="row">
-      <input type="text" id="password" name="password" required
+      <input type="password" id="password" name="password" required autocomplete="new-password"
         value="{{ suggested_password | default(value='') }}">
+      <button class="btn secondary" type="button" onclick="togglePw(this)">Show</button>
       <button class="btn secondary" type="button" onclick="regen()">Regenerate</button>
     </div>
 
@@ -34,13 +38,26 @@
 </div>
 
 <script>
+  function togglePw(btn) {
+    const el = document.getElementById("password");
+    if (el.type === "password") {
+      el.type = "text";
+      btn.textContent = "Hide";
+    } else {
+      el.type = "password";
+      btn.textContent = "Show";
+    }
+  }
+
   function regen() {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}";
     const arr = new Uint32Array(20);
     crypto.getRandomValues(arr);
     let out = "";
-    for (const n of arr) { out += chars[n % chars.length]; }
-    document.getElementById('password').value = out;
+    for (const n of arr) {
+      out += chars[n % chars.length];
+    }
+    document.getElementById("password").value = out;
   }
 </script>
 {% endblock %}

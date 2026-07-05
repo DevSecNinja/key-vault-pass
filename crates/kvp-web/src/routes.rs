@@ -1,6 +1,7 @@
 //! HTTP route handlers for the web app.
 
 use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::Form;
 use kvp_core::auth::StaticTokenCredential;
@@ -22,9 +23,31 @@ const S_TOKEN: &str = "kv_token";
 const S_TOKEN_EXP: &str = "kv_token_exp";
 const S_STATE: &str = "auth_state";
 const S_VERIFIER: &str = "pkce_verifier";
+const S_CSRF: &str = "csrf";
 
 fn now_unix() -> i64 {
     OffsetDateTime::now_utc().unix_timestamp()
+}
+
+/// Return the session's CSRF token, creating one on first use.
+async fn csrf_token(session: &Session) -> Result<String, AppError> {
+    if let Some(token) = session.get::<String>(S_CSRF).await? {
+        return Ok(token);
+    }
+    let token = oauth2::CsrfToken::new_random().secret().clone();
+    session.insert(S_CSRF, token.clone()).await?;
+    Ok(token)
+}
+
+/// Verify a form-submitted CSRF token against the session's token.
+async fn verify_csrf(session: &Session, provided: &str) -> Result<(), AppError> {
+    let expected: Option<String> = session.get(S_CSRF).await?;
+    match expected {
+        Some(token) if !token.is_empty() && token == provided => Ok(()),
+        _ => Err(AppError::Internal(anyhow::anyhow!(
+            "invalid or missing CSRF token"
+        ))),
+    }
 }
 
 /// Build a repository acting as the signed-in user, or `Unauthorized`.
@@ -88,6 +111,14 @@ pub struct EntryForm {
     url: String,
     #[serde(default)]
     notes: String,
+    #[serde(default)]
+    csrf: String,
+}
+
+#[derive(Deserialize)]
+pub struct CsrfForm {
+    #[serde(default)]
+    csrf: String,
 }
 
 // -- Health ---------------------------------------------------------------
@@ -206,7 +237,9 @@ pub async fn new_entry(
 ) -> Result<Response, AppError> {
     // Ensure the user is authenticated before showing the form.
     repository(&state, &session).await?;
+    let csrf = csrf_token(&session).await?;
     let mut ctx = user_context(&session).await;
+    ctx.insert("csrf", &csrf);
     ctx.insert(
         "suggested_password",
         &generate_password(&GeneratePasswordOptions::default())?,
@@ -220,6 +253,7 @@ pub async fn create_entry(
     Form(form): Form<EntryForm>,
 ) -> Result<Response, AppError> {
     let repo = repository(&state, &session).await?;
+    verify_csrf(&session, &form.csrf).await?;
     let entry = PasswordEntry::new(
         form.name.trim(),
         form.password,
@@ -238,13 +272,16 @@ pub async fn entry_detail(
 ) -> Result<Response, AppError> {
     let repo = repository(&state, &session).await?;
     let entry = repo.get_entry(&name).await?;
+    let csrf = csrf_token(&session).await?;
 
+    // The password is intentionally NOT sent with the page; it is fetched on
+    // demand from `/entries/{name}/reveal` only when the user asks for it.
     let mut ctx = user_context(&session).await;
     ctx.insert("name", &entry.name);
     ctx.insert("username", &entry.username);
     ctx.insert("url", &entry.url);
     ctx.insert("notes", &entry.notes);
-    ctx.insert("password", entry.password.expose_secret());
+    ctx.insert("csrf", &csrf);
     ctx.insert(
         "updated_at",
         &entry.updated_at.map(|d| d.date().to_string()),
@@ -252,12 +289,31 @@ pub async fn entry_detail(
     Ok(state.render("detail.html", &ctx))
 }
 
-pub async fn delete_entry(
+/// Return an entry's password as plain text, only when explicitly requested
+/// (backs the "Show"/"Copy" controls). Requires an authenticated session.
+pub async fn reveal_password(
     State(state): State<AppState>,
     session: Session,
     Path(name): Path<String>,
 ) -> Result<Response, AppError> {
     let repo = repository(&state, &session).await?;
+    let entry = repo.get_entry(&name).await?;
+    Ok((
+        StatusCode::OK,
+        [("cache-control", "no-store")],
+        entry.password.expose_secret().to_string(),
+    )
+        .into_response())
+}
+
+pub async fn delete_entry(
+    State(state): State<AppState>,
+    session: Session,
+    Path(name): Path<String>,
+    Form(form): Form<CsrfForm>,
+) -> Result<Response, AppError> {
+    let repo = repository(&state, &session).await?;
+    verify_csrf(&session, &form.csrf).await?;
     repo.delete_entry(&name).await?;
     Ok(Redirect::to("/entries").into_response())
 }

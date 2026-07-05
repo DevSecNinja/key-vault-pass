@@ -14,8 +14,10 @@ use anyhow::Context;
 use axum::routing::{get, post};
 use axum::Router;
 use kvp_core::config::Settings;
+use sha2::{Digest, Sha512};
 use tera::Tera;
 use time::Duration;
+use tower_sessions::cookie::Key;
 use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer};
 
 use crate::state::AppState;
@@ -37,13 +39,27 @@ fn build_tera() -> anyhow::Result<Tera> {
     Ok(tera)
 }
 
+/// Derive a 64-byte cookie signing key from `KVP_SESSION_SECRET` (SHA-512), or
+/// generate a random ephemeral key when no secret is configured (dev/mock).
+fn session_key(secret: &str) -> Key {
+    if secret.is_empty() {
+        Key::generate()
+    } else {
+        Key::from(&Sha512::digest(secret.as_bytes()))
+    }
+}
+
 fn router(state: AppState, secure_cookies: bool) -> Router {
+    // Sign the session cookie with a key derived from KVP_SESSION_SECRET so it
+    // is tamper-evident (integrity), on top of the random server-side id.
+    let key = session_key(&state.settings.session_secret);
     let session_layer = SessionManagerLayer::new(MemoryStore::default())
         .with_secure(secure_cookies)
         .with_http_only(true)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_name("kvp_session")
-        .with_expiry(Expiry::OnInactivity(Duration::hours(8)));
+        .with_expiry(Expiry::OnInactivity(Duration::hours(8)))
+        .with_signed(key);
 
     Router::new()
         .route("/", get(routes::index))
@@ -57,6 +73,7 @@ fn router(state: AppState, secure_cookies: bool) -> Router {
         )
         .route("/entries/new", get(routes::new_entry))
         .route("/entries/{name}", get(routes::entry_detail))
+        .route("/entries/{name}/reveal", get(routes::reveal_password))
         .route("/entries/{name}/delete", post(routes::delete_entry))
         .with_state(state)
         .layer(session_layer)
@@ -88,8 +105,10 @@ async fn main() -> anyhow::Result<()> {
         settings.require_web()?;
     }
 
-    // Secure cookies everywhere except plain-HTTP localhost development.
-    let secure_cookies = !settings.entra_redirect_uri.starts_with("http://localhost");
+    // Secure cookies unless the redirect URI is plain HTTP (local dev over
+    // localhost / 127.0.0.1 / ::1). Basing this on the scheme avoids marking
+    // cookies Secure over http://127.0.0.1, which would break local login.
+    let secure_cookies = settings.entra_redirect_uri.starts_with("https://");
 
     // reqwest client for the token exchange; never follow redirects.
     let http = reqwest::Client::builder()
@@ -190,6 +209,22 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn reveal_requires_authentication() {
+        let app = router(test_state(), false);
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/entries/foo/reveal")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert!(response.status().is_redirection());
+        assert_eq!(response.headers()["location"], "/auth/login");
     }
 
     #[tokio::test]
